@@ -30,8 +30,10 @@ class EmptySmokeTest(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-    def test_empty_200_aggregatesurveydatajsonview(self):
-        self._test_empty_200('/dashboard/aggregatesurveydatajsonview/')
+    def test_302_aggregatesurveydatajsonview(self):
+        # for caching reasons, we are just hardcoding the data and redirecting to the static file
+        response = self.client.get('/dashboard/aggregatesurveydatajsonview/')
+        self.assertEqual(response.status_code, 302)
 
     def test_empty_200_alerts(self):
         self._test_empty_200('/dashboard/alerts/')
