@@ -176,16 +176,16 @@ class AggregateSurveyDataJSONView(View):
         information from all surveys
         """
         return redirect(static('aggregatesurveydatajsonview.json'))
-        docs = HouseholdSurveyJSON.objects.all()
-        survey_data = []
-        count = docs.count()
-        for doc in docs:
-            survey_data.append(self._clean_json(doc))
-            count -= 1
-            if count % 10 == 0:
-                logging.warn(count)
-
-        return JsonResponse({'survey_data': survey_data})
+        #docs = HouseholdSurveyJSON.objects.all()
+        #survey_data = []
+        #count = docs.count()
+        #for doc in docs:
+        #    survey_data.append(self._clean_json(doc))
+        #    count -= 1
+        #    if count % 10 == 0:
+        #        logging.warn(count)
+        #
+        #return JsonResponse({'survey_data': survey_data})
 
 
     @classmethod
