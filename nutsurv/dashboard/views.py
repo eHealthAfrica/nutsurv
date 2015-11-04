@@ -3,7 +3,6 @@ import math
 import logging
 
 from django.shortcuts import render, HttpResponse, redirect
-from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
 from django.conf import settings
@@ -58,7 +57,8 @@ class HouseholdMemberViewset(viewsets.ModelViewSet):
         h = HouseholdMember.objects
 
         if request.GET.get('team_lead'):
-            team_lead = TeamMember.objects.get(pk=int(request.GET['team_lead']))
+            team_lead = TeamMember.objects.get(
+                pk=int(request.GET['team_lead']))
             c = c.by_teamlead(team_lead)
             h = h.by_teamlead(team_lead)
 
@@ -69,10 +69,13 @@ class HouseholdMemberViewset(viewsets.ModelViewSet):
 
         # This specific brand of hell is to filter out bad data.
         # Specifically when the months rounded to the year are not the same as the year entered
-        # Nothing we can do about that. There are two ways of entering the same data and sometimes it doesn't match.
-        months_list = [a_m[u'age_months']  for (a_m, a_y) in HouseholdMember.children.all().values_list('extra_questions', 'age_in_years') if a_m[u'age_months'] / 12 == a_y]
+        # Nothing we can do about that. There are two ways of entering the same
+        # data and sometimes it doesn't match.
+        months_list = [a_m[u'age_months'] for (a_m, a_y) in HouseholdMember.children.all(
+        ).values_list('extra_questions', 'age_in_years') if a_m[u'age_months'] / 12 == a_y]
 
-        children_age_distrobutions = list({'count': v, 'age_in_months': k} for k, v in Counter(months_list).items())
+        children_age_distrobutions = list(
+            {'count': v, 'age_in_months': k} for k, v in Counter(months_list).items())
         return Response({
             'age_distribution': {
                 'children': children_age_distrobutions,
@@ -176,17 +179,16 @@ class AggregateSurveyDataJSONView(View):
         information from all surveys
         """
         return redirect(static('aggregatesurveydatajsonview.json'))
-        #docs = HouseholdSurveyJSON.objects.all()
-        #survey_data = []
-        #count = docs.count()
-        #for doc in docs:
-        #    survey_data.append(self._clean_json(doc))
-        #    count -= 1
-        #    if count % 10 == 0:
-        #        logging.warn(count)
+        # docs = HouseholdSurveyJSON.objects.all()
+        # survey_data = []
+        # count = docs.count()
+        # for doc in docs:
+        #     survey_data.append(self._clean_json(doc))
+        #     count -= 1
+        #     if count % 10 == 0:
+        #         logging.warn(count)
         #
-        #return JsonResponse({'survey_data': survey_data})
-
+        #  return JsonResponse({'survey_data': survey_data})
 
     @classmethod
     def _clean_json(cls, doc):
@@ -230,7 +232,8 @@ class AggregateSurveyDataJSONView(View):
             if i_member.age_in_months:
 
                 zscores = anthrocomputation.keys_who_to_unicef(anthrocomputation.getAnthroResult(
-                    ageInDays=i_member.age_in_months * anthrocomputation.DAYSINMONTH,
+                    ageInDays=i_member.age_in_months *
+                    anthrocomputation.DAYSINMONTH,
                     sex=i_member.gender,
                     weight=i_member.weight,
                     height=i_member.height,
@@ -244,9 +247,11 @@ class AggregateSurveyDataJSONView(View):
 
                 for zscore_name in ('HAZ', 'WAZ', 'WHZ',):
                     if not math.isnan(zscores[zscore_name]):
-                        o_member["survey"]["zscores"][zscore_name] = zscores[zscore_name]
+                        o_member["survey"]["zscores"][
+                            zscore_name] = zscores[zscore_name]
                     else:
-                        logging.warn("'%s' calculation returned NaN, not calculating this", zscore_name)
+                        logging.warn(
+                            "'%s' calculation returned NaN, not calculating this", zscore_name)
 
             if HouseholdMember.women.all().filter(id__in=[i_member.id]).count():
                 o_member['surveyType'] = 'woman'
