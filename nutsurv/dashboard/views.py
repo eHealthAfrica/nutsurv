@@ -2,11 +2,12 @@ import json
 import math
 import logging
 
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render, HttpResponse, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.generic import View
 from django.conf import settings
+from django.contrib.staticfiles.templatetags.staticfiles import static
 
 from .serializers import (AlertSerializer, HouseholdSurveyJSONSerializer,
                           TeamMemberSerializer, HouseholdMemberSerializer,
@@ -66,8 +67,12 @@ class HouseholdMemberViewset(viewsets.ModelViewSet):
             c = c.by_first_admin_level(stratum)
             h = h.by_first_admin_level(stratum)
 
-        months_list = [v.get('age_months', 0) for v in HouseholdMember.children.all().values_list('extra_questions', flat=True)]
-        children_age_distrobutions = list({'count': v, 'age_in_months': k} for k, v in Counter(months_list).items())[1:]
+        # This specific brand of hell is to filter out bad data.
+        # Specifically when the months rounded to the year are not the same as the year entered
+        # Nothing we can do about that. There are two ways of entering the same data and sometimes it doesn't match.
+        months_list = [a_m[u'age_months']  for (a_m, a_y) in HouseholdMember.children.all().values_list('extra_questions', 'age_in_years') if a_m[u'age_months'] / 12 == a_y]
+
+        children_age_distrobutions = list({'count': v, 'age_in_months': k} for k, v in Counter(months_list).items())
         return Response({
             'age_distribution': {
                 'children': children_age_distrobutions,
@@ -163,18 +168,25 @@ class LoginRequiredView(View):
         return login_required(view)
 
 
-class AggregateSurveyDataJSONView(LoginRequiredView):
+class AggregateSurveyDataJSONView(View):
 
     @method_decorator(dont_vary_on('Cookie'))
     def get(self, request, *args, **kwargs):
         """Generates an HTTP response with a JSON document containing
         information from all surveys
         """
+        return redirect(static('aggregatesurveydatajsonview.json'))
         docs = HouseholdSurveyJSON.objects.all()
         survey_data = []
+        count = docs.count()
         for doc in docs:
             survey_data.append(self._clean_json(doc))
+            count -= 1
+            if count % 10 == 0:
+                logging.warn(count)
+
         return JsonResponse({'survey_data': survey_data})
+
 
     @classmethod
     def _clean_json(cls, doc):
