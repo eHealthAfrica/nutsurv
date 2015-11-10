@@ -72,7 +72,7 @@ class HouseholdMemberViewset(viewsets.ModelViewSet):
         # Nothing we can do about that. There are two ways of entering the same
         # data and sometimes it doesn't match.
         months_list = [a_m(u'age_months', 0) for (a_m, a_y) in HouseholdMember.children.all(
-        ).values_list('extra_questions', 'age_in_years') if a_m.get(u'age_months',0) / 12 == a_y]
+        ).values_list('extra_questions', 'age_in_years') if a_m.get(u'age_months', 0) / 12 == a_y]
 
         children_age_distrobutions = list(
             {'count': v, 'age_in_months': k} for k, v in Counter(months_list).items())
